@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Check List Πρωινού Ελέγχου Καταστήματος</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0f62fe">
+  <link rel="icon" href="icons/icon-192.png">
+  <style>
+    :root { --brand:#0f62fe; --bg:#f7f7fb; --card:#ffffff; --text:#222; --muted:#6b7280; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{position:sticky;top:0;background:var(--card);z-index:100;box-shadow:0 1px 10px rgba(0,0,0,.06)}
+    .wrap{max-width:920px;margin:0 auto;padding:16px}
+    h1{font-size:20px;margin:0 0 6px}
+    .muted{color:var(--muted);font-size:12px}
+    .card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);padding:16px;margin:16px auto}
+    .grid{display:grid;gap:12px}
+    @media(min-width:720px){.grid-3{grid-template-columns:repeat(3,1fr)}}
+    label.top{font-weight:600;font-size:14px;display:block;margin-bottom:6px}
+    input[type=text], input[type=date], select, textarea{width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:10px;font-size:14px}
+    textarea{min-height:80px}
+    details{border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+    summary{cursor:pointer;padding:12px 14px;font-weight:700;list-style:none}
+    details[open] summary{border-bottom:1px solid #e5e7eb}
+    .row{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:10px;padding:10px 14px;border-bottom:1px solid #f3f4f6}
+    .row:last-child{border-bottom:0}
+    .row input[type=checkbox]{transform:scale(1.2);}
+    .sticky-actions{position:sticky;bottom:0;z-index:50;background:rgba(255,255,255,.95);backdrop-filter:saturate(1.2) blur(4px);border-top:1px solid #e5e7eb}
+    .flex{display:flex;gap:8px;flex-wrap:wrap}
+    .right{margin-left:auto}
+    .btn{appearance:none;border:0;border-radius:12px;padding:10px 14px;font-weight:600;cursor:pointer}
+    .btn.primary{background:var(--brand);color:#fff}
+    .btn.ghost{background:#eef2ff;color:#1e3a8a}
+    .btn.ok{background:#ecfdf5;color:#065f46}
+    .btn.warn{background:#fff7ed;color:#9a3412}
+    .btn.danger{background:#fee2e2;color:#7f1d1d}
+    .tag{font-size:11px;color:#374151;background:#f3f4f6;border-radius:999px;padding:4px 8px}
+    .footer{font-size:12px;color:#6b7280;text-align:center;margin:12px 0 24px}
+    @media print{ header,.sticky-actions{display:none} body{background:#fff} .card{box-shadow:none;border:1px solid #e5e7eb} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>Check List Πρωινού Ελέγχου Καταστήματος</h1>
+      <div class="muted">PWA • Offline • Local save • CSV export</div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="card grid grid-3">
+      <div>
+        <label class="top">Κατάστημα</label>
+        <input type="text" id="store" placeholder="π.χ. Ελαιών, Αίαντος, Δραγούμη">
+      </div>
+      <div>
+        <label class="top">Ημερομηνία</label>
+        <input type="date" id="date">
+      </div>
+      <div>
+        <label class="top">Υπεύθυνος Ελέγχου</label>
+        <input type="text" id="auditor" placeholder="Ονοματεπώνυμο">
+      </div>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div>
+          <label class="top">Βάρδια</label>
+          <select id="shift">
+            <option value="">—</option>
+            <option>Πρωινή</option>
+            <option>Μεσημεριανή</option>
+            <option>Απογευματινή</option>
+          </select>
+        </div>
+        <div>
+          <label class="top">Ώρα έναρξης</label>
+          <input type="text" id="time" placeholder="π.χ. 07:30">
+        </div>
+      </div>
+      <div class="grid" style="grid-template-columns:1fr">
+        <label class="top">Γενικές Παρατηρήσεις</label>
+        <textarea id="notes" placeholder="Σύντομες σημειώσεις..."></textarea>
+      </div>
+    </div>
+
+    <div id="sections"></div>
+
+    <div class="card sticky-actions">
+      <div class="flex">
+        <button class="btn ghost" onclick="toggleAll(true)">Επιλογή όλων</button>
+        <button class="btn ghost" onclick="toggleAll(false)">Αποεπιλογή όλων</button>
+        <span class="tag" id="progressTag">0 / 0</span>
+        <div class="right"></div>
+        <button class="btn ok" onclick="saveLocal()">Αποθήκευση</button>
+        <button class="btn primary" onclick="exportCSV()">Εξαγωγή CSV</button>
+        <button class="btn warn" onclick="window.print()">Εκτύπωση</button>
+        <button class="btn danger" onclick="clearAll()">Καθαρισμός</button>
+      </div>
+    </div>
+
+    <div class="footer">Τα δεδομένα αποθηκεύονται μόνο τοπικά στη συσκευή (localStorage). Με PWA λειτουργεί offline μετά την πρώτη επίσκεψη.</div>
+  </main>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js');
+      });
+    }
+
+    const CHECKLIST = [
+      { title: "1. Εξωτερικός Χώρος & Είσοδος", items: [
+        "Καθαριότητα εισόδου",
+        "Εμφανής σήμανση προσφορών & πινακίδες",
+        "Φωτισμός καταστήματος λειτουργεί",
+        "Ράμπες, είσοδοι και ΑμεΑ πρόσβαση χωρίς εμπόδια",
+        "Θέσεις στάθμευσης καθαρές & προσβάσιμες",
+        "Θέσεις ΑμεΑ / φορτοεκφόρτωσης ελεύθερες",
+        "Δεν υπάρχουν καρότσια σε λάθος σημεία"
+      ]},
+      { title: "2. Προσωπικό & Στελέχωση", items: [
+        "Όλα τα πόστα στελεχωμένα",
+        "Προσωπικό με στολή και προβλεπόμενη εμφάνιση",
+        "Όλοι γνωρίζουν τις προτεραιότητες της ημέρας",
+        "Παρουσίες και βάρδιες καταχωρημένες"
+      ]},
+      { title: "3. Τμήματα Φρέσκων Προϊόντων — Οπωροπωλείο", items: [
+        "Φρέσκα προϊόντα, σωστή παρουσίαση",
+        "Σήμανση προέλευσης και τιμών",
+        "Απομάκρυνση αλλοιωμένων/παλιών τεμαχίων",
+        "Ψυγεία τυποποίησης & βιολογικών χωρίς ελλείψεις",
+        "Καθαριότητα χώρου – δάπεδα, πάγκοι, κάδοι"
+      ]},
+      { title: "3. Τμήματα Φρέσκων Προϊόντων — Κρεοπωλείο / Αλλαντικά / Τυριά", items: [
+        "Βιτρίνες γεμάτες, προϊόντα εντός θερμοκρασιών",
+        "Καθαριότητα χώρου – επιφάνειες, πάγκοι κοπής",
+        "Ψυγεία τυποποίησης και βιολογικών χωρίς ελλείψεις",
+        "Παρακείμενος χώρος προετοιμασίας καθαρός & οργανωμένος",
+        "Έλεγχος στοκ και ελλείψεων"
+      ]},
+      { title: "3. Τμήματα Φρέσκων Προϊόντων — Ιχθυοπωλείο", items: [
+        "Ψάρια φρέσκα, σωστή παρουσίαση",
+        "Πάγοι καθαροί – χωρίς νερά ή λιωμένα σημεία",
+        "Θερμοκρασίες εντός ορίων",
+        "Ψυγείο τυποποιημένων θαλασσινών χωρίς ελλείψεις",
+        "Σήμανση προέλευσης & τιμών",
+        "Καθαριότητα πάγκων και εργαλείων"
+      ]},
+      { title: "3. Τμήματα Φρέσκων Προϊόντων — Έτοιμα Φαγητά", items: [
+        "Bain marie σε λειτουργία και καθαρό",
+        "Θερμοκρασίες διατήρησης ≥ 60°C",
+        "Ψυγείο σάντουιτς, σαλατών και φρούτων πλήρες και καθαρό",
+        "Σήμανση τιμών, αλλεργιογόνων, περιγραφών",
+        "Καθαριότητα πάγκων, σκευών, χώρου",
+        "Χρήση γαντιών"
+      ]},
+      { title: "4. Ράφια – Ξηρά Προϊόντα", items: [
+        "Έλεγχος για κενά ραφιών",
+        "Όλα τα προϊόντα σε προσφορά διαθέσιμα",
+        "Τιμές & προσφορές σωστά τοποθετημένες",
+        "Ανεφοδιασμός γίνεται χωρίς να εμποδίζεται η κυκλοφορία",
+        "Ράφια τακτοποιημένα"
+      ]},
+      { title: "5. Ψυγεία & Καταψύξεις", items: [
+        "Θερμοκρασίες εντός ορίων (ψυγεία ≤ 5°C / καταψύκτες ≤ -18°C)",
+        "Δεν υπάρχουν προϊόντα με πάγο, υγρασία, αλλοιώσεις",
+        "Σωστή τοποθέτηση προϊόντων – χωρίς υπερφόρτωση",
+        "Πόρτες λειτουργούν σωστά και κλείνουν ερμητικά",
+        "Εξωτερικός χώρος γύρω από τα ψυγεία καθαρός"
+      ]},
+      { title: "6. Ταμεία & Εξυπηρέτηση", items: [
+        "Αρκετά ανοιχτά ταμεία για τον όγκο των πελατών",
+        "Ταμεία καθαρά, χωρίς προσωπικά αντικείμενα",
+        "POS, scanner, εκτυπωτές λειτουργούν κανονικά",
+        "Επάρκεια σε σακούλες, ρέστα, αναλώσιμα",
+        "Πρόβλεψη για υποστήριξη διαθέσιμη σε ώρες αιχμής"
+      ]},
+      { title: "7. Εμπορική Προβολή & Προσφορές", items: [
+        "Όλα τα προϊόντα σε προσφορά είναι διαθέσιμα και εμφανή",
+        "Σταντ / κάδοι promo σε κατάλληλα σημεία",
+        "Τιμές και ετικέτες σωστά τοποθετημένες",
+        "Υλικά προβολής (ετικέτες, αφίσες)"
+      ]},
+      { title: "8. Ασφάλεια", items: [
+        "Έξοδοι κινδύνου ελεύθερες",
+        "Πυροσβεστήρες σε ισχύ και στη θέση τους",
+        "Συστήματα ασφαλείας (κάμερες, αισθητήρες) λειτουργούν",
+        "Φωτισμός ασφαλείας",
+        "Ράμπες, παλέτες, διάδρομοι χωρίς εμπόδια",
+        "Δεν υπάρχουν προϊόντα πάνω ηλεκτρικά σημεία (π.χ. πολύμπριζα)"
+      ]},
+      { title: "9. Παραλαβές", items: [
+        "Χώρος παραλαβών καθαρός, οργανωμένος, προσβάσιμος",
+        "Παλετοφόρα, καρότσια διαθέσιμα και λειτουργικά",
+        "Ζυγαριές λειτουργικές",
+        "Παραλαβές γίνονται εντός χρονικών ορίων",
+        "Τηρούνται τα ραντεβού παραδόσεων & σειρά προτεραιότητας",
+        "Αλυσίδα ψύξης διατηρείται (ευπαθή προϊόντα)",
+        "Καταγραφή θερμοκρασιών όπου απαιτείται",
+        "Προϊόντα συμφωνούν με παραστατικά",
+        "Δεν υπάρχουν αλλοιωμένα ή εκτός προδιαγραφών είδη"
+      ]},
+      { title: "10. Αποθήκη", items: [
+        "Προϊόντα ταξινομημένα σωστά (Θέσης, Ανακύκλωση)",
+        "Στοκ εντός ορίων",
+        "Καθαριότητα σε ράφια, δάπεδα, διαδρόμους",
+        "Δεν υπάρχουν προϊόντα στο πάτωμα (εκτός παλετών)",
+        "Ψυγεία/καταψύκτες λειτουργούν & καταγράφονται",
+        "Όχι ληγμένα, ξεχασμένα ή κατεστραμμένα προϊόντα",
+        "Χημικά / εύφλεκτα σε ειδικούς χώρους",
+        "Περάσματα ελεύθερα",
+        "Σωστή αποθήκευση επιστροφών"
+      ]}
+    ];
+
+    const sectionsEl = document.getElementById('sections');
+
+    function render() {
+      sectionsEl.innerHTML = '';
+      CHECKLIST.forEach((sec, sIndex) => {
+        const details = document.createElement('details');
+        details.className = 'card';
+        details.open = sIndex === 0;
+
+        const summary = document.createElement('summary');
+        summary.textContent = sec.title;
+        details.appendChild(summary);
+
+        sec.items.forEach((item, i) => {
+          const row = document.createElement('div');
+          row.className = 'row';
+          const id = `s${sIndex}i${i}`;
+          row.innerHTML = `
+            <input type="checkbox" id="${id}">
+            <label for="${id}">${item}</label>
+          `;
+          details.appendChild(row);
+        });
+
+        sectionsEl.appendChild(details);
+      });
+
+      restoreDraft();
+      sectionsEl.addEventListener('change', (e) => {
+        if (e.target.matches('input[type=checkbox]')) {
+          updateProgress();
+          persistDraft();
+        }
+      });
+      updateProgress();
+    }
+
+    function gatherData() {
+      const total = document.querySelectorAll('#sections input[type=checkbox]').length;
+      const checked = document.querySelectorAll('#sections input[type=checkbox]:checked').length;
+      return {
+        store: document.getElementById('store').value.trim(),
+        date: document.getElementById('date').value,
+        auditor: document.getElementById('auditor').value.trim(),
+        shift: document.getElementById('shift').value,
+        time: document.getElementById('time').value.trim(),
+        notes: document.getElementById('notes').value.trim(),
+        total, checked,
+        sections: Array.from(document.querySelectorAll('.card details')).length, // placeholder
+      };
+    }
+
+    function updateProgress() {
+      const total = document.querySelectorAll('#sections input[type=checkbox]').length;
+      const checked = document.querySelectorAll('#sections input[type=checkbox]:checked').length;
+      document.getElementById('progressTag').textContent = `${checked} / ${total}`;
+    }
+
+    function persistDraft() {
+      localStorage.setItem('storeMorningChecklistPWA', JSON.stringify({
+        store: document.getElementById('store').value,
+        date: document.getElementById('date').value,
+        auditor: document.getElementById('auditor').value,
+        shift: document.getElementById('shift').value,
+        time: document.getElementById('time').value,
+        notes: document.getElementById('notes').value,
+        checks: Array.from(document.querySelectorAll('#sections input[type=checkbox]')).map(c => c.checked)
+      }));
+    }
+
+    function restoreDraft() {
+      const raw = localStorage.getItem('storeMorningChecklistPWA');
+      if (!raw) return;
+      try {
+        const d = JSON.parse(raw);
+        document.getElementById('store').value = d.store || '';
+        document.getElementById('date').value = d.date || '';
+        document.getElementById('auditor').value = d.auditor || '';
+        document.getElementById('shift').value = d.shift || '';
+        document.getElementById('time').value = d.time || '';
+        document.getElementById('notes').value = d.notes || '';
+        const inputs = document.querySelectorAll('#sections input[type=checkbox]');
+        (d.checks||[]).forEach((val, i) => { if (inputs[i]) inputs[i].checked = !!val; });
+      } catch(e){}
+    }
+
+    function toggleAll(flag) {
+      document.querySelectorAll('#sections input[type=checkbox]').forEach(c => c.checked = flag);
+      updateProgress();
+      persistDraft();
+    }
+
+    function saveLocal() {
+      persistDraft();
+      alert('Αποθηκεύτηκε τοπικά (localStorage).');
+    }
+
+    function exportCSV() {
+      const total = document.querySelectorAll('#sections input[type=checkbox]').length;
+      const checked = document.querySelectorAll('#sections input[type=checkbox]:checked').length;
+      const store = (document.getElementById('store').value || 'store').replace(/\s+/g,'_');
+      const date = (document.getElementById('date').value || new Date().toISOString().slice(0,10));
+      const notes = (document.getElementById('notes').value || '').replace(/"/g,'""');
+
+      const rows = [['Store','Date','Auditor','Shift','Time','Checked','Total','Notes']];
+      rows.push([
+        document.getElementById('store').value,
+        document.getElementById('date').value,
+        document.getElementById('auditor').value,
+        document.getElementById('shift').value,
+        document.getElementById('time').value,
+        checked, total, document.getElementById('notes').value
+      ]);
+      const csv = rows.map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = `morning_check_${store}_${date}.csv`;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    document.getElementById('date').value = new Date().toISOString().slice(0,10);
+    render();
+  </script>
+</body>
+</html>
