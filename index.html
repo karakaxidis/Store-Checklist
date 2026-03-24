@@ -353,15 +353,24 @@
       <div class="meta-grid">
         <div>
           <label class="field-label">Κατάστημα</label>
-          <input type="text" id="store" placeholder="π.χ. Ελαιών">
+          <select id="store">
+            <option value="">— Επίλεξε κατάστημα —</option>
+            <option>Ελαιών</option>
+            <option>Δραγούμη</option>
+            <option>Αίαντος</option>
+          </select>
         </div>
         <div>
           <label class="field-label">Ημερομηνία</label>
           <input type="date" id="date">
         </div>
         <div>
-          <label class="field-label">Υπεύθυνος</label>
+          <label class="field-label">Υπεύθυνος/η Ελέγχου</label>
           <input type="text" id="auditor" placeholder="Ονοματεπώνυμο">
+        </div>
+        <div>
+          <label class="field-label">Υπεύθυνος/η Καταστήματος</label>
+          <input type="text" id="storeManager" placeholder="Ονοματεπώνυμο">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div>
@@ -712,6 +721,7 @@ function persistDraft() {
   });
   localStorage.setItem('storeChecklist_v2', JSON.stringify({
     store: document.getElementById('store').value,
+    storeManager: document.getElementById('storeManager').value,
     date: document.getElementById('date').value,
     auditor: document.getElementById('auditor').value,
     shift: document.getElementById('shift').value,
@@ -730,6 +740,7 @@ function restoreDraft() {
     document.getElementById('store').value = d.store || '';
     document.getElementById('date').value = d.date || '';
     document.getElementById('auditor').value = d.auditor || '';
+    if (document.getElementById('storeManager')) document.getElementById('storeManager').value = d.storeManager || '';
     document.getElementById('shift').value = d.shift || '';
     document.getElementById('time').value = d.time || '';
     document.getElementById('notes').value = d.notes || '';
@@ -760,7 +771,6 @@ function toggleAll(flag) {
 
 function saveLocal() {
   persistDraft();
-  // save snapshot to history
   saveToHistory();
   showToast('Αποθηκεύτηκε ✓');
 }
@@ -771,12 +781,13 @@ function saveToHistory() {
   const store = document.getElementById('store').value || '—';
   const date = document.getElementById('date').value || new Date().toISOString().slice(0,10);
   const auditor = document.getElementById('auditor').value || '—';
+  const storeManager = document.getElementById('storeManager') ? document.getElementById('storeManager').value || '—' : '—';
   const shift = document.getElementById('shift').value || '—';
   const notes = document.getElementById('notes').value || '';
   const checks = Array.from(document.querySelectorAll('#sections input[type=checkbox]')).map(c => c.checked);
 
   const hist = getHistory();
-  hist.unshift({ id: Date.now(), store, date, auditor, shift, notes, checked, total, checks, rowExtras: JSON.parse(JSON.stringify(rowExtras)) });
+  hist.unshift({ id: Date.now(), store, date, auditor, storeManager, shift, notes, checked, total, checks, rowExtras: JSON.parse(JSON.stringify(rowExtras)) });
   if (hist.length > 30) hist.pop();
   localStorage.setItem('storeChecklist_history', JSON.stringify(hist));
 }
@@ -813,6 +824,7 @@ function loadHistory(id) {
   document.getElementById('store').value = h.store;
   document.getElementById('date').value = h.date;
   document.getElementById('auditor').value = h.auditor;
+  if (document.getElementById('storeManager')) document.getElementById('storeManager').value = h.storeManager || '';
   document.getElementById('shift').value = h.shift;
   document.getElementById('notes').value = h.notes || '';
   const inputs = document.querySelectorAll('#sections input[type=checkbox]');
@@ -845,7 +857,8 @@ function clearAll() {
   document.querySelectorAll('.extra-comment').forEach(t => t.value = '');
   document.querySelectorAll('.row-extra').forEach(e => e.classList.remove('open'));
   rowExtras = {};
-  ['store','auditor','time','notes'].forEach(id => document.getElementById(id).value = '');
+  ['store','auditor','storeManager','time','notes'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  document.getElementById('store').value = '';
   document.getElementById('shift').value = '';
   document.getElementById('date').value = new Date().toISOString().slice(0,10);
   updateProgress();
@@ -875,6 +888,9 @@ function exportCSV() {
   const total = document.querySelectorAll('#sections input[type=checkbox]').length;
   const checked = document.querySelectorAll('#sections input[type=checkbox]:checked').length;
   rows.push(['','','','']);
+  const smCSV = document.getElementById('storeManager') ? document.getElementById('storeManager').value || '' : '';
+  rows.push(['Υπεύθυνος/η Ελέγχου', auditor, '', '']);
+  rows.push(['Υπεύθυνος/η Καταστήματος', smCSV, '', '']);
   rows.push(['Σύνολο', `${checked}/${total}`, `${Math.round(checked/total*100)}%`, notes]);
 
   const bom = '\uFEFF';
@@ -916,7 +932,9 @@ function sendEmail() {
   body += `============================\n`;
   body += `Κατάστημα: ${store}\n`;
   body += `Ημερομηνία: ${date}\n`;
-  body += `Υπεύθυνος: ${auditor}\n`;
+  const storeManagerEmail = document.getElementById('storeManager') ? document.getElementById('storeManager').value || '—' : '—';
+  body += `Υπεύθυνος/η Ελέγχου: ${auditor}\n`;
+  body += `Υπεύθυνος/η Καταστήματος: ${storeManagerEmail}\n`;
   body += `Βάρδια: ${shift}\n`;
   body += `Αποτέλεσμα: ${checked}/${total} (${Math.round(checked/total*100)}%)\n`;
   body += `Παρατηρήσεις: ${notes}\n\n`;
