@@ -1,4 +1,4 @@
-const CACHE_NAME = 'store-checklist-cache-v2';
+const CACHE_NAME = 'store-checklist-cache-v3';
 const URLS = ['./','./index.html','./manifest.webmanifest','./icons/icon-192.png','./icons/icon-512.png'];
 
 self.addEventListener('install', (event) => {
