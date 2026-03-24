@@ -588,14 +588,16 @@ function render() {
         <label for="${id}">${item}</label>
         <div class="row-actions">
           <button class="icon-btn" title="Σχόλιο" onclick="toggleExtra(${sI},${iI},'comment')">💬</button>
-          <button class="icon-btn" title="Φωτογραφία" onclick="triggerPhoto(${sI},${iI})">📷</button>
-          <input type="file" accept="image/*" capture="environment" multiple id="photo-${sI}-${iI}" onchange="handlePhoto(event,${sI},${iI})">
+          <button class="icon-btn" title="Κάμερα" onclick="triggerCamera(${sI},${iI})">📷</button>
+          <button class="icon-btn" title="Γκαλερί" onclick="triggerGallery(${sI},${iI})">🖼️</button>
+          <input type="file" accept="image/*" capture="environment" id="camera-${sI}-${iI}" onchange="handlePhoto(event,${sI},${iI})">
+          <input type="file" accept="image/*" multiple id="gallery-${sI}-${iI}" onchange="handlePhoto(event,${sI},${iI})">
         </div>
         <div class="row-extra" id="extra-${sI}-${iI}">
           <textarea class="extra-comment" placeholder="Σχόλιο για αυτό το σημείο..." rows="2"
             oninput="saveComment(${sI},${iI},this.value)"></textarea>
           <div class="photo-strip" id="photos-${sI}-${iI}">
-            <button class="add-photo-btn" onclick="triggerPhoto(${sI},${iI})">+</button>
+            <button class="add-photo-btn" onclick="triggerGallery(${sI},${iI})">+</button>
           </div>
         </div>
       `;
@@ -650,8 +652,11 @@ function saveComment(sI, iI, val) {
   persistDraft();
 }
 
-function triggerPhoto(sI, iI) {
-  document.getElementById(`photo-${sI}-${iI}`).click();
+function triggerCamera(sI, iI) {
+  document.getElementById(`camera-${sI}-${iI}`).click();
+}
+function triggerGallery(sI, iI) {
+  document.getElementById(`gallery-${sI}-${iI}`).click();
 }
 
 function handlePhoto(e, sI, iI) {
@@ -690,7 +695,7 @@ function renderPhotos(sI, iI) {
   const addBtn = document.createElement('button');
   addBtn.className = 'add-photo-btn';
   addBtn.textContent = '+';
-  addBtn.onclick = () => triggerPhoto(sI, iI);
+  addBtn.onclick = () => triggerGallery(sI, iI);
   strip.appendChild(addBtn);
 
   // mark camera btn
