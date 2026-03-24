@@ -589,7 +589,7 @@ function render() {
         <div class="row-actions">
           <button class="icon-btn" title="Σχόλιο" onclick="toggleExtra(${sI},${iI},'comment')">💬</button>
           <button class="icon-btn" title="Φωτογραφία" onclick="triggerPhoto(${sI},${iI})">📷</button>
-          <input type="file" accept="image/*" id="photo-${sI}-${iI}" onchange="handlePhoto(event,${sI},${iI})">
+          <input type="file" accept="image/*" capture="environment" multiple id="photo-${sI}-${iI}" onchange="handlePhoto(event,${sI},${iI})">
         </div>
         <div class="row-extra" id="extra-${sI}-${iI}">
           <textarea class="extra-comment" placeholder="Σχόλιο για αυτό το σημείο..." rows="2"
@@ -655,19 +655,24 @@ function triggerPhoto(sI, iI) {
 }
 
 function handlePhoto(e, sI, iI) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    const src = ev.target.result;
-    getExtra(sI, iI).photos.push(src);
-    renderPhotos(sI, iI);
-    // open the panel
-    document.getElementById(`extra-${sI}-${iI}`).classList.add('open');
-    persistDraft();
-    showToast('Φωτογραφία προστέθηκε ✓');
-  };
-  reader.readAsDataURL(file);
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
+  let loaded = 0;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      getExtra(sI, iI).photos.push(ev.target.result);
+      loaded++;
+      if (loaded === files.length) {
+        renderPhotos(sI, iI);
+        document.getElementById(`extra-${sI}-${iI}`).classList.add('open');
+        persistDraft();
+        showToast(files.length > 1 ? files.length + ' φωτογραφίες προστέθηκαν ✓' : 'Φωτογραφία προστέθηκε ✓');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
 }
 
 function renderPhotos(sI, iI) {
