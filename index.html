@@ -411,7 +411,8 @@
     <button class="btn btn-ghost" onclick="toggleAll(true)">Επιλογή όλων</button>
     <button class="btn btn-ghost" onclick="toggleAll(false)">Αποεπιλογή</button>
     <div class="spacer"></div>
-    <button class="btn btn-green" onclick="saveLocal()">💾 Αποθήκευση</button>
+    <button class="btn btn-yellow" onclick="saveDraft()">📝 Προσωρινή</button>
+    <button class="btn btn-green" onclick="saveFinal()">💾 Οριστική</button>
     <button class="btn btn-primary" onclick="exportCSV()">📊 CSV</button>
     <button class="btn btn-primary" onclick="openEmailModal()">✉️ Email</button>
     <button class="btn btn-yellow" onclick="window.print()">🖨️ Print</button>
@@ -769,13 +770,26 @@ function toggleAll(flag) {
   updateProgress(); persistDraft();
 }
 
-function saveLocal() {
+function saveDraft() {
   persistDraft();
-  saveToHistory();
-  showToast('Αποθηκεύτηκε ✓');
+  saveToHistory('draft');
+  showToast('Προσωρινή αποθήκευση ✓');
 }
 
-function saveToHistory() {
+function saveFinal() {
+  const checked = document.querySelectorAll('#sections input[type=checkbox]:checked').length;
+  const total = document.querySelectorAll('#sections input[type=checkbox]').length;
+  if (checked < total) {
+    const proceed = confirm(`Ο έλεγχος είναι μερικώς συμπληρωμένος (${checked}/${total}).
+Θέλετε να κάνετε οριστική αποθήκευση;`);
+    if (!proceed) return;
+  }
+  persistDraft();
+  saveToHistory('final');
+  showToast('Οριστική αποθήκευση ✓');
+}
+
+function saveToHistory(status = 'final') {
   const total = document.querySelectorAll('#sections input[type=checkbox]').length;
   const checked = document.querySelectorAll('#sections input[type=checkbox]:checked').length;
   const store = document.getElementById('store').value || '—';
@@ -787,7 +801,7 @@ function saveToHistory() {
   const checks = Array.from(document.querySelectorAll('#sections input[type=checkbox]')).map(c => c.checked);
 
   const hist = getHistory();
-  hist.unshift({ id: Date.now(), store, date, auditor, storeManager, shift, notes, checked, total, checks, rowExtras: JSON.parse(JSON.stringify(rowExtras)) });
+  hist.unshift({ id: Date.now(), store, date, auditor, storeManager, shift, notes, checked, total, checks, status, rowExtras: JSON.parse(JSON.stringify(rowExtras)) });
   if (hist.length > 30) hist.pop();
   localStorage.setItem('storeChecklist_history', JSON.stringify(hist));
 }
@@ -807,7 +821,10 @@ function renderHistory() {
     <div class="history-item">
       <span class="h-score">${h.checked}/${h.total}</span>
       <div class="h-info">
-        <div class="h-title">${h.store} — ${h.shift}</div>
+        <div class="h-title">
+          ${h.store} — ${h.shift}
+          <span style="font-size:11px;padding:2px 8px;border-radius:999px;margin-left:6px;${h.status === 'draft' ? 'background:rgba(245,158,11,.15);color:#f59e0b' : 'background:rgba(34,197,94,.15);color:#22c55e'}">${h.status === 'draft' ? '● Ανοιχτή' : '✓ Οριστική'}</span>
+        </div>
         <div class="h-meta">${h.date} · ${h.auditor}</div>
       </div>
       <div class="h-actions">
