@@ -50,6 +50,9 @@
       display: flex; align-items: center; gap: 12px;
       height: 56px;
     }
+    @media (max-width: 600px) {
+      .logo span { display: none; }
+    }
     .logo {
       font-weight: 700; font-size: 16px; color: var(--text);
       display: flex; align-items: center; gap: 8px;
@@ -318,8 +321,28 @@
     }
     @media (max-width: 600px) {
       .meta-grid { grid-template-columns: 1fr 1fr; }
-      .footer-inner { gap: 6px; }
-      .btn { padding: 8px 12px; font-size: 12px; }
+      .wrap { padding: 16px 12px 160px; }
+      .footer-inner {
+        gap: 6px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+      }
+      .footer-row-1 { display: contents; }
+      .footer-row-2 { display: contents; }
+      .btn { padding: 10px 8px; font-size: 12px; text-align: center; }
+      .btn-save-draft { grid-column: 1; grid-row: 1; }
+      .btn-save-final { grid-column: 2; grid-row: 1; }
+      .btn-csv       { grid-column: 1; grid-row: 2; }
+      .btn-email     { grid-column: 2; grid-row: 2; }
+      .btn-toggle-all { display: none; }
+      .btn-print     { display: none; }
+      .btn-clear     { grid-column: 1 / -1; grid-row: 3; }
+      .progress-strip { padding: 10px 14px; }
+      .section-title { font-size: 13px; }
+      .check-row label { font-size: 13px; }
+      .meta-card { padding: 14px; }
+      .modal { padding: 20px; }
     }
   </style>
 </head>
@@ -408,15 +431,15 @@
 <!-- ══════════ STICKY ACTIONS ══════════ -->
 <div class="sticky-footer">
   <div class="footer-inner">
-    <button class="btn btn-ghost" onclick="toggleAll(true)">Επιλογή όλων</button>
-    <button class="btn btn-ghost" onclick="toggleAll(false)">Αποεπιλογή</button>
+    <button class="btn btn-ghost btn-toggle-all" onclick="toggleAll(true)">Επιλογή όλων</button>
+    <button class="btn btn-ghost btn-toggle-all" onclick="toggleAll(false)">Αποεπιλογή</button>
     <div class="spacer"></div>
-    <button class="btn btn-yellow" onclick="saveDraft()">📝 Προσωρινή</button>
-    <button class="btn btn-green" onclick="saveFinal()">💾 Οριστική</button>
-    <button class="btn btn-primary" onclick="exportCSV()">📊 CSV</button>
-    <button class="btn btn-primary" onclick="openEmailModal()">✉️ Email</button>
-    <button class="btn btn-yellow" onclick="window.print()">🖨️ Print</button>
-    <button class="btn btn-red" onclick="clearAll()">🗑️ Καθαρισμός</button>
+    <button class="btn btn-yellow btn-save-draft" onclick="saveDraft()">📝 Προσωρινή</button>
+    <button class="btn btn-green btn-save-final" onclick="saveFinal()">💾 Οριστική</button>
+    <button class="btn btn-primary btn-csv" onclick="exportCSV()">📊 CSV</button>
+    <button class="btn btn-primary btn-email" onclick="openEmailModal()">✉️ Email</button>
+    <button class="btn btn-yellow btn-print" onclick="window.print()">🖨️ Print</button>
+    <button class="btn btn-red btn-clear" onclick="clearAll()">🗑️ Καθαρισμός</button>
   </div>
 </div>
 
